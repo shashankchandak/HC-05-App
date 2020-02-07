@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -16,7 +17,9 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 public class ledControl extends AppCompatActivity {
@@ -36,6 +39,7 @@ public class ledControl extends AppCompatActivity {
 
         Intent newint = getIntent();
         address = newint.getStringExtra(DeviceList.EXTRA_ADDRESS);
+        Log.i("address",address);
 
         setContentView(R.layout.activity_led_control);
 
@@ -78,23 +82,34 @@ public class ledControl extends AppCompatActivity {
     }
 
     private void sendSignal ( String number ) {
+        Log.i("sendSignalCalled",number);
         if ( btSocket != null ) {
             try {
-                int bytesAvailable = btSocket.getInputStream().available();
 
-                byte []packetBytes= new byte[bytesAvailable];
 
-                if (bytesAvailable > 0) {
-                    String aString = new String(packetBytes, "UTF-8");
+                InputStream inputStream=btSocket.getInputStream();
+                DataInputStream dataInputStream=new DataInputStream(inputStream);
+                byte[] buffer = new byte[256];
+                int bytes;
+                bytes=dataInputStream.read(buffer);
+                String readMessage = new String(buffer, 0, bytes);
+                Log.i("data",readMessage);
+                display_data.setText(readMessage);
+
+//              int bytesAvailable = btSocket.getInputStream().available();
+//              byte []packetBytes= new byte[bytesAvailable];
+//                if (bytesAvailable > 0) {
+//                    String aString = new String(packetBytes, "UTF-8");
 //                    display_data.setText(bytesAvailable+ "ok");
-                    btSocket.getInputStream().read(packetBytes);
+//                    btSocket.getInputStream().read(packetBytes);
+//
+//                    for(int i=0; i<bytesAvailable;i++)
+//                    {
+//                        if(packetBytes[i]==65)
+//                        display_data.setText(aString);
+//                    }
+//                }
 
-                    for(int i=0; i<bytesAvailable;i++)
-                    {
-                        if(packetBytes[i]==65)
-                        display_data.setText(aString);
-                    }
-                }
 
             } catch (Exception e) {
                 // ADD THIS TO SEE ANY ERROR
