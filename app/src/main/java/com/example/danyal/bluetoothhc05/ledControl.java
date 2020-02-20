@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,7 @@ public class ledControl extends AppCompatActivity {
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     Map<String,String> variableLabels;
+    boolean sending;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,8 @@ public class ledControl extends AppCompatActivity {
         Intent newint = getIntent();
         address = newint.getStringExtra(DeviceList.EXTRA_ADDRESS);
         Log.i("address",address);
+
+        sending=false;
 
         setContentView(R.layout.activity_led_control);
 
@@ -72,6 +76,9 @@ public class ledControl extends AppCompatActivity {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick (View v) {
+                sending=true;
+//                Toast.makeText(getApplicationContext(),"get",Toast.LENGTH_LONG).show();
+                Log.i("xxxbtnget","clicked");
                 sendSignal("1");
             }
         });
@@ -79,13 +86,18 @@ public class ledControl extends AppCompatActivity {
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick (View v) {
-                sendSignal("2");
+                Log.i("xxxbtnstop","clicked");
+//                Toast.makeText(getApplicationContext(),"stop",Toast.LENGTH_LONG).show();
+                sending=false;
+
+                //sendSignal("2");
             }
         });
 
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick (View v) {
+//                sending=false;
                 sendSignal("3");
             }
         });
@@ -106,39 +118,9 @@ public class ledControl extends AppCompatActivity {
     }
 
     private void sendSignal ( String number ) {
-        Log.i("sendSignalCalled",number);
-        if ( btSocket != null ) {
-            try {
+        Log.i("xxxxxsendSignalCalled",number);
+        new streamBTData().execute();
 
-
-                InputStream inputStream=btSocket.getInputStream();
-                DataInputStream dataInputStream=new DataInputStream(inputStream);
-                byte[] buffer = new byte[256];
-                int bytes;
-                bytes=dataInputStream.read(buffer);
-                String receivedMessage = new String(buffer, 0, bytes);
-                Log.i("data",receivedMessage);
-                display_data.setText(receivedMessage);
-                String[] updates;
-                updates=receivedMessage.split("\n");
-
-                for(String s:updates) {
-                    String data="";
-                    data+=variableLabels.get(String.valueOf(s.charAt(0)));
-                    data+="_";
-                    data+=s.charAt(1);
-                    new ApiUbiDots().execute(data);
-                }
-
-
-
-
-            } catch (Exception e) {
-                // ADD THIS TO SEE ANY ERROR
-                e.printStackTrace();
-                msg("something wrong in recieving part");
-            }
-        }
     }
 
     private void Disconnect () {
@@ -155,6 +137,65 @@ public class ledControl extends AppCompatActivity {
 
     private void msg (String s) {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    }
+
+
+    private  class streamBTData extends AsyncTask<Void,Void,Void>{
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if ( btSocket != null ) {
+                try{
+
+                    InputStream inputStream=btSocket.getInputStream();
+                    DataInputStream dataInputStream=new DataInputStream(inputStream);
+                    byte[] buffer = new byte[256];
+                    int bytes;
+
+
+                    while (sending) {
+
+                        Log.i("xxxsending", String.valueOf(sending));
+                        bytes = dataInputStream.read(buffer);
+                        final String receivedMessage = new String(buffer, 0, bytes);
+                        Log.i("xxxxdata", receivedMessage);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                display_data.setText(receivedMessage);
+                            }
+                        });
+                        String[] updates;
+                        updates = receivedMessage.split("\n");
+
+                        for (String s : updates) {
+                            String data = "";
+                            data += variableLabels.get(String.valueOf(s.charAt(0)));
+                            data += "_";
+                            data += s.charAt(1);
+                            final String finalData = data;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.i("xxxuithread","run");
+                                    new ApiUbiDots().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,finalData);
+                                }
+                            });
+                        }
+
+
+                    }
+
+
+                } catch (Exception e) {
+                    // ADD THIS TO SEE ANY ERROR
+                    e.printStackTrace();
+                    msg("something wrong in recieving part");
+//                break;
+                }
+            }
+            return null;
+        }
     }
 
     private class ConnectBT extends AsyncTask<Void, Void, Void> {
@@ -210,6 +251,7 @@ public class ledControl extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(String... params) {
+            Log.i("xxxasync","run");
             String ubiEndpoint= endpoint + "/" + deviceLabel;
             String[] data=params[0].split("_");
             String variableLabel= data[0];
