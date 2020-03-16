@@ -152,37 +152,71 @@ public class ledControl extends AppCompatActivity {
                     byte[] buffer = new byte[256];
                     int bytes;
 
+                    boolean toggle=false;
+                    String tempMessage="";
 
                     while (sending) {
 
-                        Log.i("xxxsending", String.valueOf(sending));
-                        bytes = dataInputStream.read(buffer);
-                        final String receivedMessage = new String(buffer, 0, bytes);
-                        Log.i("xxxxdata", receivedMessage);
+                        String sendMessage="";
+                        bytes=dataInputStream.read(buffer);
+                        String message="";
+                        message=new String(buffer,0,bytes);
+                        Log.i("xxxread",message);
+                        if(tempMessage.length()==0){
+                            tempMessage+=message;
+                            continue;
+                        }
+                        else if(tempMessage.length()==1){
+                            tempMessage+=message;
+                            sendMessage=tempMessage;
+                            tempMessage="";
+
+                        }
+                        final String send=sendMessage;
+                        Log.i("xxxsenddata",send);
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                display_data.setText(receivedMessage);
+                                display_data.setText(send);
+                                String data = "";
+                                data += variableLabels.get(String.valueOf(send.charAt(0)));
+                                data += "_";
+                                data += send.charAt(1);
+                                final String finalData = data;new ApiUbiDots().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,finalData);
+
+
                             }
                         });
-                        String[] updates;
-                        updates = receivedMessage.split("\n");
 
-                        for (String s : updates) {
-                            String data = "";
-                            data += variableLabels.get(String.valueOf(s.charAt(0)));
-                            data += "_";
-                            data += s.charAt(1);
-                            final String finalData = data;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.i("xxxuithread","run");
-                                    new ApiUbiDots().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,finalData);
-                                }
-                            });
-                        }
-
+//                        Log.i("xxxsending", String.valueOf(sending));
+//                        bytes = dataInputStream.read(buffer);
+//                        final String receivedMessage = new String(buffer, 0, bytes);
+//                        Log.i("xxxxdata", receivedMessage);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                display_data.setText(receivedMessage);
+//                            }
+//                        });
+//                        String[] updates;
+//                        updates = receivedMessage.split("\n");
+//
+//                        for (String s : updates) {
+//                            String data = "";
+//                            data += variableLabels.get(String.valueOf(s.charAt(0)));
+//                            data += "_";
+//                            data += s.charAt(1);
+//                            final String finalData = data;
+//                            runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    Log.i("xxxuithread","run");
+//                                    new ApiUbiDots().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,finalData);
+//                                }
+//                            });
+//                        }
+//
 
                     }
 
@@ -190,7 +224,7 @@ public class ledControl extends AppCompatActivity {
                 } catch (Exception e) {
                     // ADD THIS TO SEE ANY ERROR
                     e.printStackTrace();
-                    msg("something wrong in recieving part");
+//                    msg("something wrong in recieving part");
 //                break;
                 }
             }
