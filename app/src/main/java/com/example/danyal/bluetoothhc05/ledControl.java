@@ -109,8 +109,8 @@ public class ledControl extends AppCompatActivity {
             }
         });
         variableLabels=new HashMap<>();
-        variableLabels.put("a","https:-industrial.ubidots.com-app-devices-5e3d46c01d8472537b2d6106-undefinednew-variable");
-        variableLabels.put("b","new-variable");
+        variableLabels.put("a","a");
+        variableLabels.put("b","b");
         variableLabels.put("c","c");
         variableLabels.put("d","d");
 
@@ -277,8 +277,9 @@ public class ledControl extends AppCompatActivity {
 
     public class ApiUbiDots extends AsyncTask<String,Void,Void>{
 
-        private String deviceLabel = "demo-1";
-        private String token = "BBFF-zRLZtutpx4ZGdEO9oSsMNIppHNdZyf";
+        private String deviceLabel = "project";
+//        private String token = "BBFF-zRLZtutpx4ZGdEO9oSsMNIppHNdZyf";
+        private String token="BBFF-QsblWiJ9xGGF1oVEdDLeCOpr8JljTX";
         private String endpoint = "https://industrial.api.ubidots.com/api/v1.6/devices";
         private String userAgent = "Java/0.1";
 
